@@ -9,39 +9,59 @@ sheetMexico = 'States de Mexico (Woo)'
 # https://docs.google.com/spreadsheets/d/1EuwgJRuPlfm6wm37L8VrDG4PXb1wbAILfl4aRFpWiLY/edit?usp=sharing
 sheetArgentina = 'States de Argentina (Woo)'
 # https://docs.google.com/spreadsheets/d/19tzWo4JbzQV0i6RhNusfbFXjg2Y1QKx4y_XFXQgBLK8/edit?usp=sharing
+sh = None
 
 wcapi = API(
-    url="URL Completa de la tienda",
-    consumer_key="key de la tienda",
-    consumer_secret="secret de la tienda",
+    url="https://woo-test.clicoh.com/",
+    consumer_key="inserteSuKeyAqui",
+    consumer_secret="inserteSuSecretAqui",
     version="wc/v3",
     timeout=10)
 
-shipping_data = {
-    "method_id": "flat_rate",
+method_data = {
+    "method_id": "apg_shipping",
     "settings": {
-        "title": "Envio a domicilio ClicOH"
+        "title": "Envio a domicilio ClicOH",
+        "tarifas": "",
+        "muestra_icono": "no"
     }
 }
 
 
-def crear_shipping_methods(sh: any):
-    cantidadRegiones = len(sh.sheet1.row_values(1))
+def crear_shipping_methods():
+    cantidadRegiones = len(sh.worksheet("Regiones").row_values(1))
+    tarifas = crearTarifas()
     for i in range(cantidadRegiones):
-        crear_zona(sh.sheet1.col_values(i+1))
+        if len(tarifas) != 0:
+            method_data["settings"]["tarifas"] = tarifas[i]
+        crear_zona(sh.worksheet("Regiones").col_values(i+1))
+
+
+def crearTarifas():
+    cadena = ""
+    tarifas = []
+    cantidadRegiones = len(sh.sheet1.row_values(1))
+    for i in range(1, cantidadRegiones*2, 2):
+        pesos = sh.worksheet("TarifasPorPeso").col_values(i)
+        pesos.pop(0)
+        precios = sh.worksheet("TarifasPorPeso").col_values(i+1)
+        precios.pop(0)
+        for j in range(len(pesos)):
+            cadena = cadena + pesos[j] + '|' + precios[j] + '\n'
+        tarifas.append(cadena)
+        cadena = ""
+    return tarifas
 
 
 def validarDecision(pais: str):
     decision = input(
         f'\n¿Esta seguro de cargarle los métodos de envío de {pais} al seller {wcapi.url}? \nResponda SI/NO: ')
-    if decision == 'SI' or decision == "si" or decision == "Si":
-        return False
-    return True
+    return not (decision == 'SI' or decision == "si" or decision == "Si")
 
 
 def crear_zona(columna: list):
     nombreZona = columna[0]
-    data = {"name": columna[0]}
+    data = {"name": nombreZona}
 
     # Crear la zona
     id_zona = (wcapi.post("shipping/zones", data).json())['id']
@@ -56,8 +76,8 @@ def crear_zona(columna: list):
     else:
         print(f"\n{nombreZona} actualizada con éxito! \n")
 
-    # Crear el método de envío - Precio Fijo: cambiar luego por el de clicoh
-    wcapi.post(f"shipping/zones/{id_zona}/methods", shipping_data).json()
+    # Crear el método de envío: Envío a domicilio ClicOH
+    wcapi.post(f"shipping/zones/{id_zona}/methods", method_data)
 
 
 def buscarValue(columna: list):
@@ -85,6 +105,7 @@ def mostrarBienvenida():
 
 
 def validarPais(pais: str):
+    global sh
     match pais:
         case 'CL':
             sh = gc.open(sheetChile)
@@ -100,10 +121,9 @@ def validarPais(pais: str):
         print('\nFin de ejecución\n')
         return
 
-    crear_shipping_methods(sh)
+    crear_shipping_methods()
 
 
 if __name__ == '__main__':
     mostrarBienvenida()
-    pais = input('Escriba las siglas del país a cargar: ')
-    validarPais(pais)
+    validarPais(input('Escriba las siglas del país a cargar: '))
