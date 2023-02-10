@@ -35,6 +35,7 @@ def crear_shipping_methods():
         if len(tarifas) != 0:
             method_data["settings"]["tarifas"] = tarifas[i]
         crear_zona(sh.worksheet("Regiones").col_values(i+1))
+    print('\nFin de ejecución\n')
 
 
 def crearTarifas():

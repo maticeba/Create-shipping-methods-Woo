@@ -11,9 +11,9 @@ sheetArgentina = 'States de Argentina (Woo)'
 # https://docs.google.com/spreadsheets/d/19tzWo4JbzQV0i6RhNusfbFXjg2Y1QKx4y_XFXQgBLK8/edit?usp=sharing
 
 wcapi = API(
-    url="URL Completa de la tienda",
-    consumer_key="key de la tienda",
-    consumer_secret="secret de la tienda",
+    url="https://woo-test.clicoh.com/",
+    consumer_key="inserteSuKeyAqui",
+    consumer_secret="inserteSuSecretAqui",
     version="wc/v3",
     timeout=10)
 
@@ -29,19 +29,18 @@ def crear_shipping_methods(sh: any):
     cantidadRegiones = len(sh.sheet1.row_values(1))
     for i in range(cantidadRegiones):
         crear_zona(sh.sheet1.col_values(i+1))
+    print('\nFin de ejecución\n')
 
 
 def validarDecision(pais: str):
     decision = input(
         f'\n¿Esta seguro de cargarle los métodos de envío de {pais} al seller {wcapi.url}? \nResponda SI/NO: ')
-    if decision == 'SI' or decision == "si" or decision == "Si":
-        return False
-    return True
+    return not (decision == 'SI' or decision == "si" or decision == "Si")
 
 
 def crear_zona(columna: list):
     nombreZona = columna[0]
-    data = {"name": columna[0]}
+    data = {"name": nombreZona}
 
     # Crear la zona
     id_zona = (wcapi.post("shipping/zones", data).json())['id']
