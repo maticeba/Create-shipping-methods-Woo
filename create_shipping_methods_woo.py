@@ -95,6 +95,17 @@ def validarPais(pais: str):
             print('\nDebe ingresar un país válido!!!\n')
             return
 
+        """
+        country_dict = {'CL': sheetChile,
+                        'MX': sheetMexico,
+                        'ARG': sheetArgentina
+                        }
+        try:
+            gc.open(country_dict[pais])
+        except:
+            print('\nDebe ingresar un país válido!!!\n')
+        """
+        
     if validarDecision(pais):
         print('\nFin de ejecución\n')
         return
